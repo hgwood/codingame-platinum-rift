@@ -37,6 +37,8 @@ def owned_by(zone, player):
     return owner(zone) == player 
 def owned(zone):
     return owned_by(zone, my_id)
+def not_owned(zone):
+    return not owned(zone)
 def neutral(zone):
     return owned_by(zone, -1)
 def npods(zone, player):
@@ -60,9 +62,11 @@ while True:
     if my_squadrons:
         for squadron in my_squadrons:
             possible_destination = neighbors(squadron)
-            possible_destinations_not_owned = tuple(destination for destination in possible_destination if not owned(destination))
-            best_destinations = possible_destinations_not_owned if possible_destinations_not_owned else possible_destination
-            selected_destinations = best_destinations[:nmy_pods(squadron)]
+            possible_destinations_not_owned = tuple(filter(not_owned, possible_destination))
+            if possible_destinations_not_owned:
+                selected_destinations = possible_destinations_not_owned[:nmy_pods(squadron)]
+            else:
+                selected_destinations = random.sample(possible_destination, nmy_pods(squadron))
             for selected_destination in selected_destinations:
                 print("1", squadron, selected_destination, sep=" ", end=" ")
         print()
