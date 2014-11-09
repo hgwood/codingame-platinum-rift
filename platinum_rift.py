@@ -18,8 +18,9 @@ def make_neighbor_getter():
     return neighbors.get
 neighbors = make_neighbor_getter() 
 
-#magnetism = {zone: platinum(zone) + sum(platinum(neighbor) for neighbor in neighbors(zone)) for zone in range(nzones)}.get
 map = sorted(range(nzones), key=platinum, reverse=True)
+#magnetism = {zone: platinum(zone) + sum(platinum(neighbor) for neighbor in neighbors(zone)) for zone in range(nzones)}.get
+#magmap = sorted(range(nzones), key=magnetism, reverse=True)
 
 def make_border_map():
     distances_to_border = {}
