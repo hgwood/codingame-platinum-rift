@@ -67,10 +67,16 @@ def nmy_pods(zone):
     return npods(zone, my_id)
 def occupied_by_me(zone):
     return nmy_pods(zone) > 0
+def safe(zone):
+    return all(not occupied_by_enemy(neighbor) for neighbor in neighbors(zone))
 def border(zone):
     return owned(zone) and any(not owned(neighbor) for neighbor in neighbors(zone))
+def safe_border(zone):
+    return border(zone) and safe(zone)
 def frontline(zone):
     return owned(zone) and any(occupied_by_enemy(neighbor) for neighbor in neighbors(zone))
+def active_frontline(zone):
+    return frontline(zone) and occupied_by_me(zone)
 def fight(zone):
     return occupied_by_me(zone) and occupied_by_enemy(zone)
 
@@ -102,8 +108,11 @@ for turn in itertools.count():
         print("WAIT")
     
     nnew_pods = nplatinum // 20
-    if nnew_pods:
-        for zone_kind in (border, frontline, fight, neutral):
+    if turn == 0:
+        place_pods(map[10:], nnew_pods)
+        print()
+    elif nnew_pods:
+        for zone_kind in (safe_border, occupied_by_me, neutral):
             nnew_pods = place_pods(filter(zone_kind, map), nnew_pods)
             if not nnew_pods: break
         print()
