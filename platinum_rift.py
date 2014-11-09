@@ -15,15 +15,24 @@ def make_neighbor_getter():
     for zone1, zone2 in links:
         neighbors[zone1].append(zone2)
         neighbors[zone2].append(zone1)
-    def sorted_view(key, reverse=True):
-        return {zone: sorted(zone_neighbors, key=key, reverse=reverse) for zone, zone_neighbors in neighbors.items()}.get
-    return sorted_view
-neighbors_by = make_neighbor_getter()
-#plain_neighbors = neighbors_by(lambda zone: zone)
-#magnetism = {zone: platinum(zone) + sum(platinum(neighbor) for neighbor in plain_neighbors(zone)) for zone in range(nzones)}.get
-neighbors = neighbors_by(platinum)
+    return neighbors.get
+neighbors = make_neighbor_getter() 
+
+#magnetism = {zone: platinum(zone) + sum(platinum(neighbor) for neighbor in neighbors(zone)) for zone in range(nzones)}.get
 map = sorted(range(nzones), key=platinum, reverse=True)
 
+def make_border_map():
+    distances_to_border = {}
+    for zone in filter(border, map):
+        distances_to_border[zone] = 1
+    unvisited = collections.deque(distances_to_border.items())
+    while unvisited:
+        current, current_distance = unvisited.popleft()
+        for neighbor in filter(owned, neighbors(current)):
+            if neighbor not in distances_to_border:
+                distances_to_border[neighbor] = current_distance + 1
+                unvisited.append((neighbor, current_distance + 1))
+    return distances_to_border.get
 
 def place_pods(zones, npods):
     i = -1 # in case the loop doesn't run (no zones or no pods)
@@ -56,9 +65,13 @@ def frontline(zone):
 def fight(zone):
     return occupied_by_me(zone) and occupied_by_enemy(zone)
 
+
+
 for turn in itertools.count():
-    platinum = stdin(0)
+    nplatinum = stdin(0)
     _zone_states = {zone: zone_state for zone, *zone_state in stdin(nzones)}
+    
+    distance_to_border = make_border_map()
     
     my_squadrons = filter(occupied_by_me, map)
     if my_squadrons:
@@ -66,18 +79,21 @@ for turn in itertools.count():
             possible_destination = neighbors(squadron)
             possible_destinations_not_owned = tuple(filter(not_owned, possible_destination))
             if possible_destinations_not_owned:
-                selected_destinations = possible_destinations_not_owned[:nmy_pods(squadron)]
+                possible_destinations_not_owned = sorted(possible_destinations_not_owned, key=platinum, reverse=True)
+                selected_destinations = itertools.islice(possible_destinations_not_owned, nmy_pods(squadron))
             else:
-                selected_destinations = random.sample(possible_destination, nmy_pods(squadron))
+                if not distance_to_border(possible_destination[0]): continue # no path to a border
+                possible_destination = sorted(possible_destination, key=distance_to_border, reverse=False)
+                selected_destinations = itertools.islice(possible_destination, nmy_pods(squadron))
             for selected_destination in selected_destinations:
                 print("1", squadron, selected_destination, sep=" ", end=" ")
         print()
     else:
         print("WAIT")
     
-    nnew_pods = platinum // 20
+    nnew_pods = nplatinum // 20
     if nnew_pods:
-        for zone_kind in (fight, neutral, frontline, border):
+        for zone_kind in (border, frontline, fight, neutral):
             nnew_pods = place_pods(filter(zone_kind, map), nnew_pods)
             if not nnew_pods: break
         print()
