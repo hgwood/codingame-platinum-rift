@@ -85,16 +85,17 @@ for turn in itertools.count():
     my_squadrons = filter(occupied_by_me, map)
     if my_squadrons:
         for squadron in my_squadrons:
+            squadron_size = nmy_pods(squadron)
             possible_destination = neighbors(squadron)
             possible_destinations_not_owned = tuple(filter(not_owned, possible_destination))
             if possible_destinations_not_owned:
                 possible_destinations_not_owned = sorted(possible_destinations_not_owned, key=platinum, reverse=True)
-                selected_destinations = itertools.islice(possible_destinations_not_owned, nmy_pods(squadron))
+                selected_destinations = possible_destinations_not_owned[:squadron_size]
             else:
                 if not distance_to_border(possible_destination[0]): continue # no path to a border
                 possible_destination = sorted(possible_destination, key=distance_to_border, reverse=False)
-                selected_destinations = itertools.islice(possible_destination, nmy_pods(squadron))
-            for selected_destination in selected_destinations:
+                selected_destinations = possible_destination[:squadron_size]
+            for _, selected_destination in zip(range(squadron_size), itertools.cycle(selected_destinations)):
                 print("1", squadron, selected_destination, sep=" ", end=" ")
         print()
     else:
