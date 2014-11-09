@@ -53,8 +53,10 @@ def border(zone):
     return owned(zone) and any(not owned(neighbor) for neighbor in neighbors(zone))
 def frontline(zone):
     return owned(zone) and any(occupied_by_enemy(neighbor) for neighbor in neighbors(zone))
+def fight(zone):
+    return occupied_by_me(zone) and occupied_by_enemy(zone)
 
-while True:
+for turn in itertools.count():
     platinum = stdin(0)
     _zone_states = {zone: zone_state for zone, *zone_state in stdin(nzones)}
     
@@ -75,7 +77,7 @@ while True:
     
     nnew_pods = platinum // 20
     if nnew_pods:
-        for zone_kind in (neutral, frontline, border):
+        for zone_kind in (fight, neutral, frontline, border):
             nnew_pods = place_pods(filter(zone_kind, map), nnew_pods)
             if not nnew_pods: break
         print()
