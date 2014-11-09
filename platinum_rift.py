@@ -40,6 +40,14 @@ def place_pods(zones, npods):
         print("1", zone, sep=" ", end=" ")
     return npods - (i + 1)
 
+
+def continent(zone):
+    if zone <= 49: return "america"
+    if zone in (143, 149, 150): return "japan"
+    if zone in (57, 67, 78, 89, 97, 104, 113): return "antartica"
+    return "eaao"
+def not_antartica(zone):
+    return continent(zone) != "antartica"
 def owner(zone):
     return _zone_states[zone][0]
 def owned_by(zone, player):
