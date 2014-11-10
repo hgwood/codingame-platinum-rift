@@ -15,16 +15,20 @@ def make_neighbor_getter():
     for zone1, zone2 in links:
         neighbors[zone1].append(zone2)
         neighbors[zone2].append(zone1)
-    return neighbors.get
+    def neighbors_getter(zone, key=lambda zone: zone, reverse=False):
+        return sorted(neighbors[zone], key=key, reverse=reverse)
+    return neighbors_getter
 neighbors = make_neighbor_getter() 
 
-map = sorted(range(nzones), key=platinum, reverse=True)
+map_seed = list(range(nzones))
+random.shuffle(map_seed)
+world = sorted(map_seed, key=platinum, reverse=True)
 #magnetism = {zone: platinum(zone) + sum(platinum(neighbor) for neighbor in neighbors(zone)) for zone in range(nzones)}.get
 #magmap = sorted(range(nzones), key=magnetism, reverse=True)
 
 def make_border_map():
     distances_to_border = {}
-    for zone in filter(border, map):
+    for zone in filter(border, world):
         distances_to_border[zone] = 1
     unvisited = collections.deque(distances_to_border.items())
     while unvisited:
@@ -73,12 +77,16 @@ def border(zone):
     return owned(zone) and any(not owned(neighbor) for neighbor in neighbors(zone))
 def safe_border(zone):
     return border(zone) and safe(zone)
+def defended_border(zone):
+    return border(zone) and occupied_by_me(zone)
 def frontline(zone):
     return owned(zone) and any(occupied_by_enemy(neighbor) for neighbor in neighbors(zone))
 def active_frontline(zone):
     return frontline(zone) and occupied_by_me(zone)
 def fight(zone):
     return occupied_by_me(zone) and occupied_by_enemy(zone)
+def quickwin(zone):
+    return neutral(zone) and all(map(safe, neighbors(zone)))
 
 
 
@@ -88,7 +96,7 @@ for turn in itertools.count():
     
     distance_to_border = make_border_map()
     
-    my_squadrons = filter(occupied_by_me, map)
+    my_squadrons = filter(occupied_by_me, world)
     if my_squadrons:
         for squadron in my_squadrons:
             squadron_size = nmy_pods(squadron)
@@ -109,11 +117,11 @@ for turn in itertools.count():
     
     nnew_pods = nplatinum // 20
     if turn == 0:
-        place_pods(map[10:], nnew_pods)
+        place_pods(world[10:], nnew_pods)
         print()
     elif nnew_pods:
-        for zone_kind in (safe_border, occupied_by_me, neutral):
-            nnew_pods = place_pods(filter(zone_kind, map), nnew_pods)
+        for zone_kind in (quickwin, safe_border, defended_border, neutral):
+            nnew_pods = place_pods(filter(zone_kind, world), nnew_pods)
             if not nnew_pods: break
         print()
     else: print("WAIT")
