@@ -20,11 +20,9 @@ def make_neighbor_getter():
     return neighbors_getter
 neighbors = make_neighbor_getter() 
 
-map_seed = list(range(nzones))
-random.shuffle(map_seed)
-world = sorted(map_seed, key=platinum, reverse=True)
-#magnetism = {zone: platinum(zone) + sum(platinum(neighbor) for neighbor in neighbors(zone)) for zone in range(nzones)}.get
-#magmap = sorted(range(nzones), key=magnetism, reverse=True)
+_allzones = list(range(nzones))
+random.shuffle(_allzones) # prevent grouped spawning
+world = sorted(_allzones, key=platinum, reverse=True)
 
 def make_border_map():
     distances_to_border = {}
@@ -38,6 +36,19 @@ def make_border_map():
                 distances_to_border[neighbor] = current_distance + 1
                 unvisited.append((neighbor, current_distance + 1))
     return distances_to_border.get
+
+def make_strategic_map():
+    distances_to_strategic_asset = {}
+    for zone in filter(capturable_source, world):
+        distances_to_strategic_asset[zone] = 0
+    unvisited = collections.deque(distances_to_strategic_asset.items())
+    while unvisited:
+        current, current_distance = unvisited.popleft()
+        for neighbor in neighbors(current):
+            if neighbor not in distances_to_strategic_asset:
+                distances_to_strategic_asset[neighbor] = current_distance + 1
+                unvisited.append((neighbor, current_distance + 1))
+    return {zone: (distance, platinum(zone)) for zone, distance in distances_to_strategic_asset.items()}.get
 
 def place_pods(zones, npods):
     i = -1 # in case the loop doesn't run (no zones or no pods)
@@ -87,7 +98,24 @@ def fight(zone):
     return occupied_by_me(zone) and occupied_by_enemy(zone)
 def quickwin(zone):
     return neutral(zone) and all(map(safe, neighbors(zone)))
-
+def source(zone):
+    return platinum(zone) > 0
+def capturable_source(zone):
+    return source(zone) and not owned(zone)
+def large_source(zone):
+    return platinum(zone) >= 4
+def capturable_large_source(zone):
+    return not owned(zone) and large_source(zone)
+def undefended_capturable_large_source(zone):
+    return capturable_large_source(zone) and not occupied_by_enemy(zone) and not any(map(occupied_by_enemy, neighbors(zone)))
+def owned_large_source(zone):
+    return owned(zone) and large_source(zone)
+def owned_large_source_under_attack(zone):
+    return owned_large_source(zone) and frontline(zone)
+def spawn(zone):
+    return neutral(zone) or owned(zone)
+def beachhead(zone):
+    return spawn(zone) and any(map(undefended_capturable_large_source, neighbors(zone)))
 
 
 for turn in itertools.count():
@@ -95,6 +123,7 @@ for turn in itertools.count():
     _zone_states = {zone: zone_state for zone, *zone_state in stdin(nzones)}
     
     distance_to_border = make_border_map()
+    distance_to_capturable_source = make_strategic_map()
     
     my_squadrons = filter(occupied_by_me, world)
     if my_squadrons:
@@ -106,8 +135,11 @@ for turn in itertools.count():
                 possible_destinations_not_owned = sorted(possible_destinations_not_owned, key=platinum, reverse=True)
                 selected_destinations = possible_destinations_not_owned[:squadron_size]
             else:
-                if not distance_to_border(possible_destination[0]): continue # no path to a border
-                possible_destination = sorted(possible_destination, key=distance_to_border, reverse=False)
+                if distance_to_capturable_source(possible_destination[0]) is not None:
+                    distance = distance_to_capturable_source
+                elif distance_to_border(possible_destination[0]) is not None:
+                    distance = distance_to_border       
+                possible_destination = sorted(possible_destination, key=distance, reverse=False)
                 selected_destinations = possible_destination[:squadron_size]
             for _, selected_destination in zip(range(squadron_size), itertools.cycle(selected_destinations)):
                 print("1", squadron, selected_destination, sep=" ", end=" ")
@@ -120,7 +152,7 @@ for turn in itertools.count():
         place_pods(world[10:], nnew_pods)
         print()
     elif nnew_pods:
-        for zone_kind in (quickwin, safe_border, defended_border, neutral):
+        for zone_kind in (owned_large_source_under_attack, beachhead, quickwin, safe_border, defended_border, neutral):
             nnew_pods = place_pods(filter(zone_kind, world), nnew_pods)
             if not nnew_pods: break
         print()
