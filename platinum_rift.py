@@ -139,6 +139,8 @@ for turn in itertools.count():
                     distance = distance_to_capturable_source
                 elif distance_to_border(possible_destination[0]) is not None:
                     distance = distance_to_border       
+                else:
+                    continue
                 possible_destination = sorted(possible_destination, key=distance, reverse=False)
                 selected_destinations = possible_destination[:squadron_size]
             for _, selected_destination in zip(range(squadron_size), itertools.cycle(selected_destinations)):
