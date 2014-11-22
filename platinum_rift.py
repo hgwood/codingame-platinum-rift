@@ -151,7 +151,7 @@ for turn in itertools.count():
     
     nnew_pods = nplatinum // 20
     if turn == 0:
-        place_pods(world[10:], nnew_pods)
+        place_pods(world, nnew_pods)
         print()
     elif nnew_pods:
         for zone_kind in (owned_large_source_under_attack, beachhead, quickwin, safe_border, defended_border, neutral):
