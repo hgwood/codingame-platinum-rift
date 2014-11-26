@@ -152,7 +152,8 @@ for turn in itertools.count():
     nnew_pods = nplatinum // 20
     if turn == 0:
         skip = 5 if nplayers > 2 else 0
-        place_pods(world[skip:], nnew_pods)
+        for zone in world[skip:skip+5]:
+            print("2", zone, end=" ")
         print()
     elif nnew_pods:
         for zone_kind in (owned_large_source_under_attack, beachhead, quickwin, safe_border, defended_border, neutral):
