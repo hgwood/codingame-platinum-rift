@@ -35,7 +35,7 @@ def make_border_map():
             if neighbor not in distances_to_border:
                 distances_to_border[neighbor] = current_distance + 1
                 unvisited.append((neighbor, current_distance + 1))
-    return distances_to_border.get
+    return lambda zone: distances_to_border.get(zone, -1)
 
 def make_strategic_map():
     distances_to_strategic_asset = {}
@@ -130,19 +130,14 @@ for turn in itertools.count():
         for squadron in my_squadrons:
             squadron_size = nmy_pods(squadron)
             possible_destination = neighbors(squadron)
-            possible_destinations_not_owned = tuple(filter(not_owned, possible_destination))
-            if possible_destinations_not_owned:
-                possible_destinations_not_owned = sorted(possible_destinations_not_owned, key=platinum, reverse=True)
-                selected_destinations = possible_destinations_not_owned[:squadron_size]
+            if distance_to_capturable_source(possible_destination[0]) is not None:
+                distance = distance_to_capturable_source
+            elif distance_to_border(possible_destination[0]) is not None:
+                distance = distance_to_border
             else:
-                if distance_to_capturable_source(possible_destination[0]) is not None:
-                    distance = distance_to_capturable_source
-                elif distance_to_border(possible_destination[0]) is not None:
-                    distance = distance_to_border       
-                else:
-                    continue
-                possible_destination = sorted(possible_destination, key=distance, reverse=False)
-                selected_destinations = possible_destination[:squadron_size]
+                continue
+            possible_destination = sorted(possible_destination, key=distance, reverse=False)
+            selected_destinations = possible_destination[:squadron_size]
             for _, selected_destination in zip(range(squadron_size), itertools.cycle(selected_destinations)):
                 print("1", squadron, selected_destination, sep=" ", end=" ")
         print()
