@@ -97,7 +97,7 @@ def active_frontline(zone):
 def fight(zone):
     return occupied_by_me(zone) and occupied_by_enemy(zone)
 def quickwin(zone):
-    return neutral(zone) and all(map(safe, neighbors(zone)))
+    return source(zone) and neutral(zone) and all(map(safe, neighbors(zone)))
 def source(zone):
     return platinum(zone) > 0
 def capturable_source(zone):
