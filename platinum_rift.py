@@ -48,7 +48,7 @@ def make_strategic_map():
             if neighbor not in distances_to_strategic_asset:
                 distances_to_strategic_asset[neighbor] = current_distance + 1
                 unvisited.append((neighbor, current_distance + 1))
-    return {zone: (distance, platinum(zone)) for zone, distance in distances_to_strategic_asset.items()}.get
+    return {zone: (distance, -platinum(zone)) for zone, distance in distances_to_strategic_asset.items()}.get
 
 def place_pods(zones, npods):
     i = -1 # in case the loop doesn't run (no zones or no pods)
