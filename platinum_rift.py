@@ -10,6 +10,9 @@ nplayers, my_id, nzones, nlinks = stdin()
 platinum = dict(stdin(nzones)).get
 links = stdin(nlinks)
 
+ensure_surviving = nplayers == 4 or (nplayers == 3 and random.randrange(2) == 1)
+print("ensure surviving", ensure_surviving, file=sys.stderr)
+
 def make_neighbor_getter():
     neighbors = collections.defaultdict(list)
     for zone1, zone2 in links:
@@ -210,7 +213,7 @@ for turn in itertools.count():
                 print("2", zone, end=" ")
             print()
     elif nnew_pods:
-        if nplayers == 4:
+        if ensure_surviving:
             if not i_am_in_antartica():
                 nnew_pods = place_pods(antartica, 1)
             nenemies = enemy_in_antartica()
