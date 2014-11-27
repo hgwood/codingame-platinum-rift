@@ -23,6 +23,8 @@ neighbors = make_neighbor_getter()
 _allzones = list(range(nzones))
 random.shuffle(_allzones) # prevent grouped spawning
 world = sorted(_allzones, key=platinum, reverse=True)
+japan = sorted((143, 149, 150), key=platinum, reverse=True)
+antartica = sorted((57, 67, 78, 89, 97, 104, 113), key=platinum, reverse=True)
 
 def make_border_map():
     distances_to_border = {}
@@ -137,14 +139,14 @@ for turn in itertools.count():
     if my_squadrons:
         for squadron in my_squadrons:
             squadron_size = nmy_pods(squadron)
-            possible_destination = neighbors(squadron)
-            if distance_to_capturable_source(possible_destination[0]) is not None:
-                distance = distance_to_capturable_source
-            elif distance_to_border(possible_destination[0]) is not None:
-                distance = distance_to_border
-            else:
-                continue
-            possible_destination = sorted(possible_destination, key=distance, reverse=False)
+                possible_destination = neighbors(squadron)
+                if distance_to_capturable_source(possible_destination[0]) is not None:
+                    distance = distance_to_capturable_source
+                elif distance_to_border(possible_destination[0]) is not None:
+                    distance = distance_to_border
+                else:
+                    continue
+                possible_destination = sorted(possible_destination, key=distance, reverse=False)
             selected_destinations = possible_destination[:squadron_size]
             for _, selected_destination in zip(range(squadron_size), itertools.cycle(selected_destinations)):
                 print("1", squadron, selected_destination, sep=" ", end=" ")
@@ -154,9 +156,13 @@ for turn in itertools.count():
     
     nnew_pods = nplatinum // 20
     if turn == 0:
-        skip = 5 if nplayers > 2 else 0
-        for zone in world[skip:skip+5]:
+        skip = 5 if nplayers > 2 else 1
+        place = 5 if nplayers <= 3 else 4
+        for zone in world[skip:skip+place]:
             print("2", zone, end=" ")
+        if nplayers == 4:
+            print("1", japan[0], end=" ")
+            print("1", antartica[0], end=" ")
         print()
     elif nnew_pods:
         for zone_kind in (owned_large_source_under_attack, quickwin, safe_border, defended_border, neutral):
