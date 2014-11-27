@@ -74,6 +74,8 @@ def not_owned(zone):
     return not owned(zone)
 def neutral(zone):
     return owned_by(zone, -1)
+def enemy(zone):
+    return not neutral(zone) and not owned(zone)
 def npods(zone, player):
     return _zone_states[zone][player + 1]
 def occupied_by_enemy(zone):
@@ -98,8 +100,12 @@ def fight(zone):
     return occupied_by_me(zone) and occupied_by_enemy(zone)
 def quickwin(zone):
     return source(zone) and neutral(zone) and all(map(safe, neighbors(zone)))
+def safer_quickwin(zone):
+    return quickwin(zone) and all(map(not_source, neighbors(zone)))
 def source(zone):
     return platinum(zone) > 0
+def not_source(zone):
+    return not source(zone)
 def capturable_source(zone):
     return source(zone) and not owned(zone)
 def large_source(zone):
@@ -112,6 +118,8 @@ def owned_large_source(zone):
     return owned(zone) and large_source(zone)
 def owned_large_source_under_attack(zone):
     return owned_large_source(zone) and frontline(zone)
+def enemy_large_source(zone):
+    return enemy(zone) and large_source(zone)
 def spawn(zone):
     return neutral(zone) or owned(zone)
 def beachhead(zone):
@@ -151,7 +159,8 @@ for turn in itertools.count():
             print("2", zone, end=" ")
         print()
     elif nnew_pods:
-        for zone_kind in (owned_large_source_under_attack, beachhead, quickwin, safe_border, defended_border, neutral):
+        for zone_kind in (owned_large_source_under_attack, quickwin, safe_border, defended_border, neutral):
+            print("placing max", nnew_pods, "on", zone_kind.__qualname__, file=sys.stderr)
             nnew_pods = place_pods(filter(zone_kind, world), nnew_pods)
             if not nnew_pods: break
         print()
