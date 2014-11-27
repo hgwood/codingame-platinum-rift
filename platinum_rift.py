@@ -25,6 +25,8 @@ random.shuffle(_allzones) # prevent grouped spawning
 world = sorted(_allzones, key=platinum, reverse=True)
 japan = sorted((143, 149, 150), key=platinum, reverse=True)
 antartica = sorted((57, 67, 78, 89, 97, 104, 113), key=platinum, reverse=True)
+def enemy_in_antartica():
+    return sum(map(enemy_npods, antartica))
 
 def make_border_map():
     distances_to_border = {}
@@ -112,6 +114,8 @@ def enemy(zone):
     return not neutral(zone) and not owned(zone)
 def npods(zone, player):
     return _zone_states[zone][player + 1]
+def enemy_npods(zone):
+    return sum(npods(zone, player) for player in range(nplayers) if player != my_id)
 def occupied_by_enemy(zone):
     return any(npods(zone, player) for player in range(nplayers) if player != my_id)
 def nmy_pods(zone):
@@ -196,13 +200,17 @@ for turn in itertools.count():
                 print("2", most_interesting_mine[2], end=" ")
             print("1", japan[0], end=" ")
             print("1", antartica[0], end=" ")
-        print()
+            print()
         else:
             skip = 5 if nplayers > 2 else 1
             for zone in world[skip:skip+5]:
                 print("2", zone, end=" ")
             print()
     elif nnew_pods:
+        if nplayers == 4:
+            nenemies = enemy_in_antartica()
+            if nenemies > 0:
+                nnew_pods = place_pods(antartica, min(nenemies + 1, nnew_pods))
         for zone_kind in (owned_large_source_under_attack, quickwin, safe_border, defended_border, neutral):
             print("placing max", nnew_pods, "on", zone_kind.__qualname__, file=sys.stderr)
             nnew_pods = place_pods(filter(zone_kind, world), nnew_pods)
