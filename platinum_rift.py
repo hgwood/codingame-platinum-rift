@@ -195,7 +195,7 @@ for turn in itertools.count():
     
     nnew_pods = nplatinum // 20
     if turn == 0:
-        if nplayers == 4:
+        if nplayers > 2:
             print("3", most_interesting_mine[0], end=" ")
             if len(most_interesting_mine) >= 2:
                 print("3", most_interesting_mine[1], end=" ")
