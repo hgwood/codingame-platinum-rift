@@ -127,9 +127,9 @@ def safe(zone):
 def border(zone):
     return owned(zone) and any(not owned(neighbor) for neighbor in neighbors(zone))
 def safe_border(zone):
-    return border(zone) and safe(zone)
+    return border(zone) and safe(zone) and not_antartica(zone)
 def defended_border(zone):
-    return border(zone) and occupied_by_me(zone)
+    return border(zone) and occupied_by_me(zone) and not_antartica(zone)
 def frontline(zone):
     return owned(zone) and any(occupied_by_enemy(neighbor) for neighbor in neighbors(zone))
 def active_frontline(zone):
