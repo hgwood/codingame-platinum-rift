@@ -208,7 +208,7 @@ for turn in itertools.count():
             print("1", antartica[0], end=" ")
             print()
         else:
-            skip = 5 if nplayers > 2 else 1
+            skip = 1
             for zone in world[skip:skip+5]:
                 print("2", zone, end=" ")
             print()
