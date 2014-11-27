@@ -139,14 +139,14 @@ for turn in itertools.count():
     if my_squadrons:
         for squadron in my_squadrons:
             squadron_size = nmy_pods(squadron)
-                possible_destination = neighbors(squadron)
-                if distance_to_capturable_source(possible_destination[0]) is not None:
-                    distance = distance_to_capturable_source
-                elif distance_to_border(possible_destination[0]) is not None:
-                    distance = distance_to_border
-                else:
-                    continue
-                possible_destination = sorted(possible_destination, key=distance, reverse=False)
+            possible_destination = neighbors(squadron)
+            if distance_to_capturable_source(possible_destination[0]) is not None:
+                distance = distance_to_capturable_source
+            elif distance_to_border(possible_destination[0]) is not None:
+                distance = distance_to_border
+            else:
+                continue
+            possible_destination = sorted(possible_destination, key=distance, reverse=False)
             selected_destinations = possible_destination[:squadron_size]
             for _, selected_destination in zip(range(squadron_size), itertools.cycle(selected_destinations)):
                 print("1", squadron, selected_destination, sep=" ", end=" ")
