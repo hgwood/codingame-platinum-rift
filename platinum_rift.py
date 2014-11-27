@@ -25,6 +25,8 @@ random.shuffle(_allzones) # prevent grouped spawning
 world = sorted(_allzones, key=platinum, reverse=True)
 japan = sorted((143, 149, 150), key=platinum, reverse=True)
 antartica = sorted((57, 67, 78, 89, 97, 104, 113), key=platinum, reverse=True)
+def i_am_in_antartica():
+    return any(map(occupied_by_me, antartica))
 def enemy_in_antartica():
     return sum(map(enemy_npods, antartica))
 
@@ -162,7 +164,8 @@ def spawn(zone):
     return neutral(zone) or owned(zone)
 def beachhead(zone):
     return spawn(zone) and any(map(undefended_capturable_large_source, neighbors(zone)))
-
+def not_antartica(zone):
+    return zone not in antartica
 
 for turn in itertools.count():
     nplatinum = stdin(0)
@@ -208,6 +211,8 @@ for turn in itertools.count():
             print()
     elif nnew_pods:
         if nplayers == 4:
+            if not i_am_in_antartica():
+                nnew_pods = place_pods(antartica, 1)
             nenemies = enemy_in_antartica()
             if nenemies > 0:
                 nnew_pods = place_pods(antartica, min(nenemies + 1, nnew_pods))
