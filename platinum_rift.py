@@ -1,4 +1,4 @@
-import sys, math, random, itertools, collections
+import sys, math, random, itertools, collections, functools
 
 def stdin(n=1):
     if n == 0: return int(input())
@@ -51,6 +51,45 @@ def make_strategic_map():
                 distances_to_strategic_asset[neighbor] = current_distance + 1
                 unvisited.append((neighbor, current_distance + 1))
     return {zone: (distance, -platinum(zone)) for zone, distance in distances_to_strategic_asset.items()}.get
+
+def popping(popable): 
+    while popable:
+        yield popable.pop()
+
+def walk(seeds, neighbors=neighbors):
+    visited = set()
+    not_visited = collections.deque(seeds)
+    while not_visited:
+        visiting = not_visited.popleft()
+        for neighbor in neighbors(visiting):
+            if neighbor not in visited:
+                not_visited.append(neighbor)
+        yield visiting
+        visited.add(visiting)
+
+def clusters(selector=lambda zone: True):
+    zone_filter = functools.partial(filter, selector)
+    neighbor_getter = lambda zone: zone_filter(neighbors(zone))
+    seeds = set(zone_filter(world))
+    for seed in popping(seeds):
+        component = frozenset(walk([seed], neighbors=neighbor_getter))
+        seeds -= component
+        yield component
+
+def source_of_at_least(min_platinum):
+    return lambda zone: platinum(zone) >= min_platinum
+
+def mines(min_platinum=1): # mine = cluster of sources
+    yield from clusters(source_of_at_least(min_platinum))
+
+def concentration(mine):
+    return sum(platinum(source) for source in mine if platinum(source) > 1)
+    
+concentration = {mine: concentration(mine) for mine in mines()}.get
+mines_by_concentration = sorted(mines(), key=concentration, reverse=True)
+most_interesting_mine = mines_by_concentration[1]
+most_interesting_mine = sorted(most_interesting_mine, key=platinum, reverse=True)
+print(most_interesting_mine, file=sys.stderr)
 
 def place_pods(zones, npods):
     i = -1 # in case the loop doesn't run (no zones or no pods)
@@ -149,14 +188,20 @@ for turn in itertools.count():
     
     nnew_pods = nplatinum // 20
     if turn == 0:
-        skip = 5 if nplayers > 2 else 1
-        place = 5 if nplayers <= 3 else 4
-        for zone in world[skip:skip+place]:
-            print("2", zone, end=" ")
         if nplayers == 4:
+            print("3", most_interesting_mine[0], end=" ")
+            if len(most_interesting_mine) >= 2:
+                print("3", most_interesting_mine[1], end=" ")
+            if len(most_interesting_mine) >= 3:
+                print("2", most_interesting_mine[2], end=" ")
             print("1", japan[0], end=" ")
             print("1", antartica[0], end=" ")
         print()
+        else:
+            skip = 5 if nplayers > 2 else 1
+            for zone in world[skip:skip+5]:
+                print("2", zone, end=" ")
+            print()
     elif nnew_pods:
         for zone_kind in (owned_large_source_under_attack, quickwin, safe_border, defended_border, neutral):
             print("placing max", nnew_pods, "on", zone_kind.__qualname__, file=sys.stderr)
